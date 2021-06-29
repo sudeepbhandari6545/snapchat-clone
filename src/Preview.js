@@ -16,6 +16,8 @@ import SendIcon from '@material-ui/icons/Send'
 
 import './Preview.css'
 import { v4 as uuid } from 'uuid'
+import { db, storage } from './firebase'
+import firebase from 'firebase'
 
 function Preview() {
   const cameraImage = useSelector(selectcameraImage)
@@ -33,6 +35,35 @@ function Preview() {
   }
   const sendPost = () => {
     const id = uuid()
+    const uploadTask = storage
+      .ref(`posts/${id}`)
+      .putString(cameraImage, 'data_url')
+
+    uploadTask.on(
+      'state_changed',
+      null,
+      (error) => {
+        //error function
+        console.log(error)
+      },
+      () => {
+        //complete function
+        storage
+          .ref('posts')
+          .child(id)
+          .getDownloadURL()
+          .then((url) => {
+            db.collection('posts').add({
+              imageUrl: url,
+              username: 'SUDEEP',
+              read: false,
+              //porfilepic
+              timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            })
+            history.replace('/chats')
+          })
+      },
+    )
   }
 
   return (
